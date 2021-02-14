@@ -1,8 +1,9 @@
 from app import create_app
-from flask_sqlalchemy import SQLAlchemy
+from src.app.views import chat
+
 
 app = create_app()
-db = SQLAlchemy(app)
+app.register_blueprint(chat)
 
 
 if __name__ == "__main__":
