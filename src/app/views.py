@@ -12,3 +12,9 @@ def index():
 def login_page():
     if request.method == "GET":
         return render_template("login.html")
+
+
+@chat.route("/register", methods=["GET", "POST"])
+def login_page():
+    if request.method == "GET":
+        return render_template("register.html")
