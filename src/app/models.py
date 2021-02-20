@@ -17,28 +17,31 @@ association_table = db.Table(
 class User(db.Model, UserMixin):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
+    name = db.Column(db.String(50), nullable=False, unique=True)
     password = db.Column(db.String(100), nullable=False)
     registered = db.Column(db.DateTime(), default=datetime.utcnow)
-    chats = db.relationship("Chat", secondary=association_table, back_populates="users")
     messages = db.relationship("Message", backref="sender")
 
     def __init__(self, name, password):
         self.name = name
         self.password = pwd_context.hash(password)
 
+    def check_password(self, password):
+        return pwd_context.verify(password, self.password)
+
 
 class Chat(db.Model):
     __tablename__ = "chats"
     id = db.Column(db.Integer, primary_key=True)
     messages = db.relationship("Message", backref="chat")
-    users = db.relationship("User", secondary=association_table, back_populates="chats")
+    users = db.relationship("User", secondary=association_table, backref="chats")
 
 
 class Message(db.Model):
     __tablename__ = "messages"
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    chat_id = db.Column(db.Integer, db.ForeignKey("chats.id"))
     text = db.Column(db.String(500), nullable=False)
     sent = db.Column(db.DateTime(), default=datetime.utcnow)
 
