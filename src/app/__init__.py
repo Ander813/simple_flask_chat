@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_login import LoginManager
+from flask_socketio import SocketIO
 
 
 app = Flask(__name__)
@@ -9,6 +10,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 manager = LoginManager(app)
 from app import models
+
+
+socketio = SocketIO(app)
 
 
 from . import views
