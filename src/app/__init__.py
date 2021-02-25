@@ -7,15 +7,15 @@ app = Flask(__name__)
 app.config.from_object("conf.conf.Config")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+socketio = SocketIO(app)
+from .socketio import *
+
 
 manager = LoginManager(app)
 from app import models
 
 
-socketio = SocketIO(app)
-
-
-from . import views
+from .views import *
 
 app.register_blueprint(views.chat)
 
