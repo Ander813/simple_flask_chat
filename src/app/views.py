@@ -1,8 +1,7 @@
-from flask import Blueprint, render_template, Response, redirect, url_for
+from flask import Blueprint, render_template, Response, redirect, url_for, session
 from flask_login import login_user
 from sqlalchemy.exc import IntegrityError
 
-from src.app import socketio
 from src.app.database import db
 from src.app.decorators import logged_in_redirect, unauthorized_redirect
 from src.app.forms import RegisterForm, LoginForm
@@ -23,11 +22,12 @@ def login_page():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        if user:
-            if user.check_password(form.password.data):
-                login_user(user)
-                return redirect(url_for("chat.index"))
-        else:
+        try:
+            assert user.check_password(form.password.data)
+            login_user(user)
+            session["user"] = user.email
+            return redirect(url_for("chat.index"))
+        except (AttributeError, AssertionError):
             return Response("Invalid credentials", status=401)
     return render_template("login.html", form=form)
 
@@ -43,12 +43,3 @@ def register_page():
         except IntegrityError as e:
             return Response("User with such email already exists", 400)
     return render_template("register.html", form=form)
-
-@socketio.on('event')
-def chat_event_handler(json, methods=["GET", "POST"]):
-    """
-    :param json: json
-    :param methods: POST GET
-    :return: None
-    """
-    pass
