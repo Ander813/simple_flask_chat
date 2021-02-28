@@ -13,10 +13,10 @@
 <script type="text/javascript">
 $(document).ready(function() {
 
-	var socket = io.connect('http://127.0.0.1:5000');
+	var socket = io.connect('http://127.0.0.1:5000?room=501');
 
 	socket.on('connect', function() {
-		socket.emit('event', 'User has connected!');
+		socket.emit('event', {"msg": "User has connected!"});
 	});
 
 	socket.on('response', function(msg) {
