@@ -16,7 +16,12 @@ $(document).ready(function() {
 	var socket = io.connect('http://127.0.0.1:5000?room=501');
 
 	socket.on('connect', function() {
-		socket.emit('event', {"msg": "User has connected!"});
+	    socket.emit('join',
+            {"room": 1});
+
+		socket.emit('event',
+            {"msg": "User has connected!",
+             "room": 1});
 	});
 
 	socket.on('response', function(msg) {
