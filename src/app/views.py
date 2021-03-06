@@ -1,11 +1,18 @@
-from flask import Blueprint, render_template, Response, redirect, url_for, session
-from flask_login import login_user
+from flask import (
+    Blueprint,
+    render_template,
+    Response,
+    redirect,
+    url_for,
+    session,
+)
+from flask_login import login_user, current_user
 from sqlalchemy.exc import IntegrityError
 
 from src.app.database import db
 from src.app.decorators import logged_in_redirect, unauthorized_redirect
 from src.app.forms import RegisterForm, LoginForm
-from src.app.models import User
+from src.app.models import User, Chat
 
 chat = Blueprint("chat", __name__, template_folder="templates")
 
@@ -14,6 +21,15 @@ chat = Blueprint("chat", __name__, template_folder="templates")
 @unauthorized_redirect("chat.login_page")
 def index():
     return render_template("index.html")
+
+
+@chat.route("/<room:int>", methods=["GET"])
+@unauthorized_redirect("chat.login_page")
+def chat_page(room):
+    chat = Chat.query.filter(Chat.id == room, User.email == current_user.email).first()
+    if Chat.query.filter(Chat.id == room, User.email == current_user.email).first():
+        return render_template("chat.html", messages=chat.messages, users=chat.users)
+    return redirect(url_for("chat.index"))
 
 
 @chat.route("/login", methods=["GET", "POST"])
