@@ -1,10 +1,13 @@
-from app import socketio
+from app import socketio, redis_client
 from flask import session, request
 from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
 
 from src.app.database import db
 from src.app.models import Chat, User, Message
+
+
+socketio_prefix = "socketio"
 
 
 @socketio.on("event")
@@ -45,6 +48,8 @@ def on_connect():
 
     :return: None
     """
+    redis_client[f"{socketio_prefix}:{current_user.email}"] = request.sid
+    emit("connected", current_user.email)
 
 
 @socketio.on("disconnect")
@@ -54,3 +59,5 @@ def on_disconnect():
 
     :return: None
     """
+    del redis_client[f"{socketio_prefix}:{current_user.email}"]
+    emit("disconnect", current_user.email)
