@@ -26,7 +26,7 @@ def index():
     return render_template("index.html")
 
 
-@chat.route("/<room:int>", methods=["GET"])
+@chat.route("/<int:room>", methods=["GET"])
 @unauthorized_redirect("chat.login_page")
 def chat_page(room):
     chat = Chat.query.filter(Chat.id == room, User.email == current_user.email).first()
