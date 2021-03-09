@@ -13,12 +13,34 @@ socketio_prefix = "socketio"
 @socketio.on("event")
 def chat_event_handler(data):
     """
+    If room is not given in data, creates new chat with sender and receiver.
+    If room id is given, checks if user in chat and sends
     :param data: dict
     :return: None
     """
+    if "msg" not in data:
+        return
+
     room = data.get("room")
+    if not room:
+        message_to = data.get("receiver")
+        if message_to:
+            receiver = User.query.filter_by(email=message_to)
+            sender = User.query.filter_by(email=current_user.email)
+            message = Message(sender.id, data["msg"], room)
+            chat = Chat()
+
+            db.session.add(chat)
+            chat.users.append(receiver, sender)
+            chat.messages.append(message)
+
+            db.session.commit()
+
+            emit("response", data["msg"], room=redis_client[receiver.email])
+            return
+
     user = User.query.filter(User.email == session["user"], Chat.id == room).first()
-    if user and "msg" in data:
+    if user:
         message = Message(user.id, data["msg"], room)
         db.session.add(message)
         db.session.commit()
