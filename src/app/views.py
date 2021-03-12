@@ -39,8 +39,8 @@ def chat_page(room):
 def get_online_users():
     users_online = []
     for key in redis_client.scan_iter(f"{socketio_prefix}:*"):
-        users_online.append(key.split(":")[-1])
-    return users_online
+        users_online.append(key.decode().split(":")[-1])
+    return {"online": users_online}
 
 
 @chat.route("/login", methods=["GET", "POST"])

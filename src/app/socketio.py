@@ -37,7 +37,7 @@ def chat_event_handler(data):
             db.session.commit()
 
             emit("response", data["msg"], room=redis_client[receiver.email])
-            return
+        return
 
     user = User.query.filter(User.email == session["user"], Chat.id == room).first()
     if user:
@@ -71,7 +71,7 @@ def on_connect():
     :return: None
     """
     redis_client[f"{socketio_prefix}:{current_user.email}"] = request.sid
-    emit("connected", current_user.email)
+    emit("connected", current_user.email, broadcast=True)
 
 
 @socketio.on("disconnect")
@@ -82,4 +82,4 @@ def on_disconnect():
     :return: None
     """
     del redis_client[f"{socketio_prefix}:{current_user.email}"]
-    emit("disconnect", current_user.email)
+    emit("disconnect", current_user.email, broadcast=True)

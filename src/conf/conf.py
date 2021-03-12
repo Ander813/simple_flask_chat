@@ -11,3 +11,4 @@ class Config:
     TESTING = os.getenv("TESTING")
     SERVER = os.getenv("SERVER")
     SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
+    REDIS_URL = os.getenv("REDIS")
