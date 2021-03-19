@@ -1,3 +1,5 @@
+import json
+
 from flask import (
     Blueprint,
     render_template,
@@ -26,17 +28,33 @@ def index():
     return render_template("index.html", current_user=current_user.email)
 
 
-@chat.route("/<int:room>", methods=["GET"])
+@chat.route("/chat", methods=["GET"])
 @unauthorized_redirect("chat.login_page")
-def chat_page(room):
-    chat = Chat.query.filter(Chat.id == room, User.email == current_user.email).first()
-    if chat:
+def chat_page():
+    chats = Chat.query.filter(User.email == current_user.email)
+    if chats:
+        for chat in chats:
+            for i in range(len(chat.users)):
+                if chat.users[i].email == current_user.email:
+                    del chat.users[i]
+                    break
+
         return render_template(
             "chat.html",
-            messages=chat.messages,
-            users=chat.users,
+            chats=chats,
             current_user=current_user.email,
         )
+    return redirect(url_for("chat.index"))
+
+
+@chat.route("/chat/<int:id>", methods=["GET"])
+def get_chat(id):
+    chat = Chat.query.filter(Chat.id == id, User.email == current_user.email).first()
+    message_list = []
+    if chat:
+        for message in chat.messages:
+            message_list.append(message.as_dict())
+        return json.dumps(message_list)
     return redirect(url_for("chat.index"))
 
 

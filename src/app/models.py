@@ -27,7 +27,7 @@ class User(db.Model, UserMixin):
         self.password = pwd_context.hash(password)
 
     def __repr__(self):
-        return f"{self.email} User"
+        return f"{self.email}"
 
     def check_password(self, password):
         return pwd_context.verify(password, self.password)
@@ -52,3 +52,11 @@ class Message(db.Model):
         self.sender_id = sender_id
         self.text = text
         self.chat_id = chat_id
+
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "text": self.text,
+            "sent": str(self.sent),
+            "sender": self.sender.email,
+        }
