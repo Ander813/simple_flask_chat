@@ -31,7 +31,7 @@ def index():
 @chat.route("/chat", methods=["GET"])
 @unauthorized_redirect("chat.login_page")
 def chat_page():
-    chats = Chat.query.filter(User.email == current_user.email)
+    chats = Chat.query.filter(User.email == current_user.email).all()
     if chats:
         for chat in chats:
             for i in range(len(chat.users)):
@@ -39,12 +39,11 @@ def chat_page():
                     del chat.users[i]
                     break
 
-        return render_template(
-            "chat.html",
-            chats=chats,
-            current_user=current_user.email,
-        )
-    return redirect(url_for("chat.index"))
+    return render_template(
+        "chat.html",
+        chats=chats,
+        current_user=current_user.email,
+    )
 
 
 @chat.route("/chat/<int:id>", methods=["GET"])
@@ -55,7 +54,6 @@ def get_chat(id):
         for message in chat.messages:
             message_list.append(message.as_dict())
         return json.dumps(message_list)
-    return redirect(url_for("chat.index"))
 
 
 @chat.route("/online", methods=["GET"])
