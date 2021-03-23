@@ -7,6 +7,7 @@ from flask import (
     redirect,
     url_for,
     session,
+    make_response,
 )
 from flask_login import login_user, current_user
 from sqlalchemy.exc import IntegrityError
@@ -74,7 +75,9 @@ def login_page():
             assert user.check_password(form.password.data)
             login_user(user)
             session["user"] = user.email
-            return redirect(url_for("chat.index"))
+            resp = make_response(redirect(url_for("chat.index")))
+            resp.set_cookie("user", current_user.email)
+            return resp
         except (AttributeError, AssertionError):
             return Response("Invalid credentials", status=401)
     return render_template("login.html", form=form)
