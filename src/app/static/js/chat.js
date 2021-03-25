@@ -47,10 +47,20 @@ async function addMessages(id) {
     }
 }
 
+async function markInactive(){
+    document.getElementsByClassName("active_chat")[0].classList.remove("active_chat")
+}
+
+async function markActive(id){
+    document.getElementById(id).classList.add("active_chat")
+}
+
 async function updateMessages(event) {
-    let id = this.id
+    await markInactive()
+    await markActive(this.id)
     await clearChat()
-    await addMessages(id)
+    await addMessages(this.id)
+
 }
 
 chats = document.getElementsByClassName("chat_list")
