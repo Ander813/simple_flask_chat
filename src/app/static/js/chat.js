@@ -1,8 +1,8 @@
 function getCookie(name) {
-  let matches = document.cookie.match(new RegExp(
+    let matches = document.cookie.match(new RegExp(
     "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-  ));
-  return matches ? decodeURIComponent(matches[1]) : undefined;
+    ));
+    return matches ? decodeURIComponent(matches[1]) : undefined;
 }
 
 Element.prototype.remove = function() {
@@ -29,10 +29,9 @@ async function clearChat() {
 async function addMessages(id) {
     let messages = await getChatMessages(id)
     let msg_history = document.getElementsByClassName("msg_history")[0]
-    console.log(msg_history)
+    let username = getCookie("user").replace(/"/g, '')
     for (let i = 0; i<messages.length; i++){
-        if(messages[i].sender === getCookie("user")){
-            console.log(messages[i].sender)
+        if(messages[i].sender === username){
             msg_history.innerHTML += `<div class="outgoing_msg"><div class="sent_msg">
                                 <p>${messages[i].text}</p>
                                 <span class="time_date">${messages[i].sent}</span></div></div>`
@@ -44,7 +43,6 @@ async function addMessages(id) {
                                                     <div class="received_withd_msg">
                                                         <p>${ messages[i].text }</p> 
                                                         <span class="time_date">${ messages[i].sent }</span></div></div>`
-            console.log(msg_history.innerHTML)
         }
     }
 }
@@ -57,6 +55,5 @@ async function updateMessages(event) {
 
 chats = document.getElementsByClassName("chat_list")
 for(let i = 0; i < chats.length; i++){
-    console.log(chats[i])
     chats[i].addEventListener("click", updateMessages)
 }
