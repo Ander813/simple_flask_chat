@@ -4,6 +4,7 @@ from flask_login import UserMixin
 from passlib.context import CryptContext
 
 from .database import db
+from .model_types import ChoiceType
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -38,6 +39,7 @@ class Chat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     messages = db.relationship("Message", backref="chat")
     users = db.relationship("User", secondary=association_table, backref="chats")
+    chat_type = db.Column(ChoiceType({"pm": "pm", "cn": "cn"}))
 
 
 class Message(db.Model):

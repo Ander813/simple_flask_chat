@@ -12,11 +12,11 @@ from flask import (
 from flask_login import login_user, current_user
 from sqlalchemy.exc import IntegrityError
 
-from src.app import socketio_prefix
-from src.app.database import db
-from src.app.decorators import logged_in_redirect, unauthorized_redirect
-from src.app.forms import RegisterForm, LoginForm
-from src.app.models import User, Chat
+from app import socketio_prefix
+from app.database import db
+from app.decorators import logged_in_redirect, unauthorized_redirect
+from app.forms import RegisterForm, LoginForm
+from app.models import User, Chat
 from app import redis_client
 
 

@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_login import LoginManager
+from flask_migrate import Migrate
 from flask_redis import FlaskRedis
 from flask_socketio import SocketIO
 
@@ -12,6 +13,11 @@ redis_client = FlaskRedis(app)
 
 socketio = SocketIO(app)
 from .socketio import *
+
+
+from .database import db
+
+migrate = Migrate(app, db)
 
 
 manager = LoginManager(app)
