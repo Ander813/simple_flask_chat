@@ -41,6 +41,9 @@ class Chat(db.Model):
     users = db.relationship("User", secondary=association_table, backref="chats")
     chat_type = db.Column(ChoiceType({"pm": "pm", "cn": "cn"}))
 
+    def __init__(self, chat_type):
+        self.chat_type = chat_type
+
 
 class Message(db.Model):
     __tablename__ = "messages"
@@ -50,10 +53,11 @@ class Message(db.Model):
     text = db.Column(db.String(500), nullable=False)
     sent = db.Column(db.DateTime(), default=datetime.utcnow)
 
-    def __init__(self, sender_id, text, chat_id):
+    def __init__(self, sender_id, text, chat):
+        if chat:
+            self.chat_id = chat
         self.sender_id = sender_id
         self.text = text
-        self.chat_id = chat_id
 
     def as_dict(self):
         return {

@@ -3,11 +3,40 @@ from flask import session, request
 from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
 
-from src.app.database import db
-from src.app.models import Chat, User, Message
+from app.database import db
+from app.models import Chat, User, Message
 
 
 socketio_prefix = "socketio"
+
+
+@socketio.on("pm")
+def chat_event_handler(data):
+    id = data.get("id")
+    sender = User.query.get(email=current_user.email)
+    receiver = User.query.get(email=data.get("receiver"))
+
+    if "msg" not in data or not receiver:
+        return
+
+    if not id:
+        try:
+            chat = Chat(chat_type="pm")
+            chat.users.append(sender, receiver)
+            chat.messages.append(Message(sender.id, data["msg"]))
+        except Exception as e:
+            return
+    else:
+        try:
+            chat = Chat.query.get(id=data["id"], chat_type="pm")
+            chat.messages.append(Message(sender.id, data["msg"]))
+        except Exception as e:
+            return
+    db.session.add(chat)
+    db.session.commit()
+
+    sid = redis_client.get(f"{socketio_prefix}:{receiver}")
+    emit("response", data["msg"], room=sid)
 
 
 @socketio.on("event")
@@ -22,29 +51,21 @@ def chat_event_handler(data):
         return
 
     room = data.get("room")
-    if not room:
-        message_to = data.get("receiver")
-        if message_to:
-            receiver = User.query.filter_by(email=message_to)
-            sender = User.query.filter_by(email=current_user.email)
-            message = Message(sender.id, data["msg"], room)
-            chat = Chat()
-
-            db.session.add(chat)
-            chat.users.append(receiver, sender)
-            chat.messages.append(message)
-
-            db.session.commit()
-
-            emit("response", data["msg"], room=redis_client[receiver.email])
-        return
-
-    user = User.query.filter(User.email == session["user"], Chat.id == room).first()
-    if user:
-        message = Message(user.id, data["msg"], room)
+    emails = (
+        Chat.query.join(User, Chat.users)
+        .with_entities(User.email)
+        .filter(Chat.id == room)
+        .all()
+    )
+    if emails:
+        message = Message(current_user.id, data["msg"], room)
         db.session.add(message)
         db.session.commit()
-        emit("response", data, room=room)
+        for email in emails:
+            sid = redis_client.get(f"{socketio_prefix}:{email.email}")
+            if sid:
+                sid = sid.decode("utf-8")
+                emit("response", data, room=sid)
 
 
 @socketio.on("join")

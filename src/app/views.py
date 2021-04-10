@@ -26,6 +26,7 @@ chat = Blueprint("chat", __name__, template_folder="templates")
 @chat.route("/", methods=["GET"])
 @unauthorized_redirect("chat.login_page")
 def index():
+    # chat = Chat.query.join(User).filter(User.email.contains(current_user.email)).first()
     return render_template("index.html", current_user=current_user.email)
 
 
@@ -91,6 +92,7 @@ def register_page():
         try:
             db.session.add(User(email=form.email.data, password=form.password1.data))
             db.session.commit()
+            return redirect(url_for("chat.index"))
         except IntegrityError as e:
             return Response("User with such email already exists", 400)
     return render_template("register.html", form=form)
