@@ -1,7 +1,7 @@
 from app import socketio, redis_client
-from flask import session, request
+from flask import request
 from flask_login import current_user
-from flask_socketio import emit, join_room, leave_room
+from flask_socketio import emit
 
 from app.database import db
 from app.models import Chat, User, Message
@@ -12,76 +12,64 @@ socketio_prefix = "socketio"
 
 @socketio.on("pm")
 def chat_event_handler(data):
-    id = data.get("id")
-    sender = User.query.get(email=current_user.email)
-    receiver = User.query.get(email=data.get("receiver"))
-
-    if "msg" not in data or not receiver:
+    if "msg" not in data:
         return
+    id = data.get("id")
+    sender = User.query.filter_by(email=current_user.email).first()
 
     if not id:
         try:
-            chat = Chat(chat_type="pm")
-            chat.users.append(sender, receiver)
-            chat.messages.append(Message(sender.id, data["msg"]))
-        except Exception as e:
+            receiver = User.query.filter_by(email=data["receiver"]).first()
+        except KeyError:
             return
+
+    try:
+        chat = Chat.query.filter_by(id=data["id"], chat_type="pm").first()
+        emails_query = (
+            Chat.query.join(User, Chat.users)
+            .with_entities(User.email)
+            .filter(Chat.id == data["id"])
+            .all()
+        )
+        emails = [email.email for email in emails_query]
+        chat.messages.append(Message(sender.id, data["msg"]))
+    except KeyError:
+        chat = Chat(chat_type="pm")
+        chat.users.append(sender, receiver)
+        emails = [sender.email.receiver.email]
+        chat.messages.append(Message(sender.id, data["msg"]))
     else:
-        try:
-            chat = Chat.query.get(id=data["id"], chat_type="pm")
-            chat.messages.append(Message(sender.id, data["msg"]))
-        except Exception as e:
-            return
-    db.session.add(chat)
-    db.session.commit()
+        db.session.add(chat)
+        db.session.commit()
 
-    sid = redis_client.get(f"{socketio_prefix}:{receiver}")
-    emit("response", data["msg"], room=sid)
+    for email in emails:
+        sid = redis_client.get(f"{socketio_prefix}:{email}")
+        if sid:
+            sid = sid.decode("utf-8")
+            emit("response", data, to=sid)
 
 
-@socketio.on("event")
+@socketio.on("disc")
 def chat_event_handler(data):
-    """
-    If room is not given in data, creates new chat with sender and receiver.
-    If room id is given, checks if user in chat and sends
-    :param data: dict
-    :return: None
-    """
-    if "msg" not in data:
+    if "msg" not in data or "room" not in data:
         return
 
-    room = data.get("room")
-    emails = (
+    room = data["room"]
+    emails_query = (
         Chat.query.join(User, Chat.users)
         .with_entities(User.email)
         .filter(Chat.id == room)
         .all()
     )
-    if emails:
+    if emails_query:
         message = Message(current_user.id, data["msg"], room)
         db.session.add(message)
         db.session.commit()
-        for email in emails:
-            sid = redis_client.get(f"{socketio_prefix}:{email.email}")
+        for email_obj in emails_query:
+            sid = redis_client.get(f"{socketio_prefix}:{email_obj.email}")
             if sid:
                 sid = sid.decode("utf-8")
-                emit("response", data, room=sid)
-
-
-@socketio.on("join")
-def on_join(json):
-    room = json.get("room")
-    user = session.get("user")
-    if room and user:
-        join_room(room)
-
-
-@socketio.on("leave")
-def on_leave(json):
-    room = json.get("room")
-    user = session.get("user")
-    if room and user:
-        leave_room(room)
+                emit("response", data, to=sid)
 
 
 @socketio.on("connect")
@@ -102,5 +90,6 @@ def on_disconnect():
 
     :return: None
     """
+    print("disc")
     del redis_client[f"{socketio_prefix}:{current_user.email}"]
     emit("disconnect", current_user.email, broadcast=True)

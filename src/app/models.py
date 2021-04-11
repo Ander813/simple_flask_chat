@@ -53,7 +53,7 @@ class Message(db.Model):
     text = db.Column(db.String(500), nullable=False)
     sent = db.Column(db.DateTime(), default=datetime.utcnow)
 
-    def __init__(self, sender_id, text, chat):
+    def __init__(self, sender_id, text, chat=None):
         if chat:
             self.chat_id = chat
         self.sender_id = sender_id

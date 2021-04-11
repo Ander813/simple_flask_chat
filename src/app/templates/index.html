@@ -16,17 +16,14 @@ $(document).ready(function() {
 	var socket = io.connect('http://127.0.0.1:5000?room=501');
 
 	socket.on('connect', function() {
-	    socket.emit('join',
-            {"room": 1});
-
-		socket.emit('event',
+		socket.emit('pm',
             {"msg": "Hi it's me!",
-             "room": 1});
+             "id": 1});
 	});
 
-	socket.on('response', function(msg) {
-		$("#messages").append('<li>'+msg+'</li>');
-		console.log('Received message');
+	socket.on('response', function(resp) {
+	    console.log(resp)
+		$("#messages").append('<li>'+resp.msg+'</li>')
 	});
 });
 </script>

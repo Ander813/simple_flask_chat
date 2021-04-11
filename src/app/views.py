@@ -50,7 +50,11 @@ def chat_page():
 
 @chat.route("/chat/<int:id>", methods=["GET"])
 def get_chat(id):
-    chat = Chat.query.filter(Chat.id == id, User.email == current_user.email).first()
+    chat = (
+        Chat.query.filter(Chat.id == id, User.email == current_user.email)
+        .order_by("id")
+        .first()
+    )
     message_list = []
     if chat:
         for message in chat.messages:
