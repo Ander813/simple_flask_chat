@@ -4,6 +4,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" type="text/css"
           rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="static/css/chat.css">
+
 </head>
 <body>
 <div class="container">
@@ -30,8 +31,8 @@
                                     <div class="chat_img"><img src="https://ptetutorials.com/images/user-profile.png"
                                                                alt="sunil"></div>
                                     <div class="chat_ib">
-                                        <h5>{% for user in chats[0].users[0:2] %}{{ user.email }} {% endfor %} <span class="chat_date">{{ chats[0].messages[-1].sent }}</span></h5>
-                                        <p>{{ chats[0].messages[-1].text }}</p>
+                                        <h5>{% for user in chats[0].users[0:2] %}{{ user.email }} {% endfor %} <span class="chat_date">{% if chats[0].messages|length > 1 %}{{ chats[0].messages[-1].sent }}{% endif %}</span></h5>
+                                        <p>{% if chats[0].messages|length > 1 %}{{ chats[0].messages[-1].text }}{% endif %}</p>
                                     </div>
                                 </div>
                         </div>
@@ -74,8 +75,8 @@
                 </div>
                 <div class="type_msg">
                     <div class="input_msg_write">
-                        <input type="text" class="write_msg" placeholder="Type a message"/>
-                        <button class="msg_send_btn" type="button"><i class="fa fa-paper-plane-o"
+                        <input type="text" class="write_msg" id="msg" placeholder="Type a message"/>
+                        <button class="msg_send_btn" id="send" type="button"><i class="fa fa-paper-plane-o"
                                                                       aria-hidden="true"></i></button>
                     </div>
                 </div>
@@ -84,6 +85,7 @@
 
     </div>
 </div>
+<script src="https://cdn.socket.io/3.1.1/socket.io.min.js" integrity="sha384-gDaozqUvc4HTgo8iZjwth73C6dDDeOJsAgpxBcMpZYztUfjHXpzrpdrHRdVp8ySO" crossorigin="anonymous"></script>
 <script src="static/js/chat.js"></script>
 </body>
 </html>

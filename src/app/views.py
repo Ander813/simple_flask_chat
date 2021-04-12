@@ -40,7 +40,6 @@ def chat_page():
                 if chat.users[i].email == current_user.email:
                     del chat.users[i]
                     break
-
     return render_template(
         "chat.html",
         chats=chats,

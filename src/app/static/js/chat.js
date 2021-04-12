@@ -5,6 +5,8 @@ function getCookie(name) {
     return matches ? decodeURIComponent(matches[1]) : undefined;
 }
 
+username = getCookie("user").replace(/"/g, '')
+
 Element.prototype.remove = function() {
     this.parentElement.removeChild(this);
 }
@@ -26,24 +28,27 @@ async function clearChat() {
     document.getElementsByClassName('outgoing_msg').remove()
 }
 
-async function addMessages(id) {
-    let messages = await getChatMessages(id)
+function addMessage(msg){
     let msg_history = document.getElementsByClassName("msg_history")[0]
-    let username = getCookie("user").replace(/"/g, '')
-    for (let i = 0; i<messages.length; i++){
-        if(messages[i].sender === username){
-            msg_history.innerHTML += `<div class="outgoing_msg"><div class="sent_msg">
-                                <p>${messages[i].text}</p>
-                                <span class="time_date">${messages[i].sent}</span></div></div>`
+    if(msg.sender === username){
+        msg_history.innerHTML += `<div class="outgoing_msg"><div class="sent_msg">
+                                <p>${msg.text}</p>
+                                <span class="time_date">${msg.sent}</span></div></div>`
         }
-        else{
-            msg_history.innerHTML += `<div class="incoming_msg"><div class="incoming_msg_img"><img src="https://ptetutorials.com/images/user-profile.png"\n' 
+    else{
+        msg_history.innerHTML += `<div class="incoming_msg"><div class="incoming_msg_img"><img src="https://ptetutorials.com/images/user-profile.png"\n' 
                                                                                    alt="sunil"></div>
                                                 <div class="received_msg">
                                                     <div class="received_withd_msg">
-                                                        <p>${ messages[i].text }</p> 
-                                                        <span class="time_date">${ messages[i].sent }</span></div></div>`
+                                                        <p>${ msg.text }</p> 
+                                                        <span class="time_date">${ msg.sent }</span></div></div>`
         }
+}
+
+async function addMessagesFromChat(id) {
+    let messages = await getChatMessages(id)
+    for (let i = 0; i<messages.length; i++){
+        addMessage(messages[i])
     }
 }
 
@@ -59,7 +64,7 @@ async function updateMessages(event) {
     await markInactive()
     await markActive(this.id)
     await clearChat()
-    await addMessages(this.id)
+    await addMessagesFromChat(this.id)
 
 }
 
@@ -67,3 +72,31 @@ chats = document.getElementsByClassName("chat_list")
 for(let i = 0; i < chats.length; i++){
     chats[i].addEventListener("click", updateMessages)
 }
+
+function joinChat(){
+    socket = io.connect('http://127.0.0.1:5000?room=501');
+
+	socket.on("connect", function() {
+		console.log("connected")
+	});
+
+	socket.on("response", function(response) {
+        addMessage(response)
+    })
+    socket.on("disconnect", function(resp) {
+        console.log("wut", resp)
+    })
+}
+
+function sendMessage(){
+    let msg = document.getElementById("msg").value
+    if (msg !== "") {
+        socket.emit('pm',
+            {"text": msg, "sender": username, "id": 1});
+    }
+}
+
+document.addEventListener("DOMContentLoaded", joinChat)
+
+button = document.getElementById("send")
+button.addEventListener("click", sendMessage)

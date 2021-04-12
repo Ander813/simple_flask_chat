@@ -12,7 +12,7 @@ socketio_prefix = "socketio"
 
 @socketio.on("pm")
 def chat_event_handler(data):
-    if "msg" not in data:
+    if "text" not in data:
         return
     id = data.get("id")
     sender = User.query.filter_by(email=current_user.email).first()
@@ -32,18 +32,22 @@ def chat_event_handler(data):
             .all()
         )
         emails = [email.email for email in emails_query]
-        chat.messages.append(Message(sender.id, data["msg"]))
+        message = Message(sender.id, data["text"])
+        chat.messages.append(message)
     except KeyError:
         chat = Chat(chat_type="pm")
         chat.users.append(sender, receiver)
         emails = [sender.email.receiver.email]
-        chat.messages.append(Message(sender.id, data["msg"]))
+        message = Message(sender.id, data["text"])
+        chat.messages.append(message)
     else:
         db.session.add(chat)
         db.session.commit()
 
+    data.update({"sent": str(message.sent)})
     for email in emails:
         sid = redis_client.get(f"{socketio_prefix}:{email}")
+        print(email, sid)
         if sid:
             sid = sid.decode("utf-8")
             emit("response", data, to=sid)
@@ -51,7 +55,7 @@ def chat_event_handler(data):
 
 @socketio.on("disc")
 def chat_event_handler(data):
-    if "msg" not in data or "room" not in data:
+    if "text" not in data or "room" not in data:
         return
 
     room = data["room"]
@@ -62,7 +66,7 @@ def chat_event_handler(data):
         .all()
     )
     if emails_query:
-        message = Message(current_user.id, data["msg"], room)
+        message = Message(current_user.id, data["text"], room)
         db.session.add(message)
         db.session.commit()
         for email_obj in emails_query:
@@ -92,4 +96,4 @@ def on_disconnect():
     """
     print("disc")
     del redis_client[f"{socketio_prefix}:{current_user.email}"]
-    emit("disconnect", current_user.email, broadcast=True)
+    emit("disconnected", current_user.email, broadcast=True)
