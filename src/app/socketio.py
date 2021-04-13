@@ -8,6 +8,7 @@ from app.models import Chat, User, Message
 
 
 socketio_prefix = "socketio"
+prevent_disconnect = set()
 
 
 @socketio.on("pm")
@@ -47,7 +48,6 @@ def chat_event_handler(data):
     data.update({"sent": str(message.sent)})
     for email in emails:
         sid = redis_client.get(f"{socketio_prefix}:{email}")
-        print(email, sid)
         if sid:
             sid = sid.decode("utf-8")
             emit("response", data, to=sid)
@@ -83,6 +83,9 @@ def on_connect():
 
     :return: None
     """
+    if redis_client.get(f"{socketio_prefix}:{current_user.email}") is not None:
+        prevent_disconnect.add(current_user.email)
+
     redis_client[f"{socketio_prefix}:{current_user.email}"] = request.sid
     emit("connected", current_user.email, broadcast=True)
 
@@ -94,6 +97,8 @@ def on_disconnect():
 
     :return: None
     """
-    print("disc")
-    del redis_client[f"{socketio_prefix}:{current_user.email}"]
-    emit("disconnected", current_user.email, broadcast=True)
+    if current_user.email not in prevent_disconnect:
+        del redis_client[f"{socketio_prefix}:{current_user.email}"]
+        emit("disconnected", current_user.email, broadcast=True)
+    else:
+        prevent_disconnect.remove(current_user.email)
