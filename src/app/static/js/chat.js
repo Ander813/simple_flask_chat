@@ -17,6 +17,10 @@ NodeList.prototype.remove = HTMLCollection.prototype.remove = function() {
         }
     }
 }
+async function scrollChat(){
+    let msg_history = document.getElementById("chat_history")
+    msg_history.scrollTop = msg_history.scrollHeight
+}
 
 async function getChatMessages(id) {
     let response = await fetch('/chat/' + id)
@@ -28,8 +32,8 @@ async function clearChat() {
     document.getElementsByClassName('outgoing_msg').remove()
 }
 
-function addMessage(msg){
-    let msg_history = document.getElementsByClassName("msg_history")[0]
+async function addMessage(msg){
+    let msg_history = document.getElementById("chat_history")
     if(msg.sender === username){
         msg_history.innerHTML += `<div class="outgoing_msg"><div class="sent_msg">
                                 <p>${msg.text}</p>
@@ -48,8 +52,9 @@ function addMessage(msg){
 async function addMessagesFromChat(id) {
     let messages = await getChatMessages(id)
     for (let i = 0; i<messages.length; i++){
-        addMessage(messages[i])
+       await addMessage(messages[i])
     }
+    await scrollChat()
 }
 
 async function markInactive(){
@@ -65,6 +70,7 @@ async function updateMessages(event) {
     await markActive(this.id)
     await clearChat()
     await addMessagesFromChat(this.id)
+    await scrollChat()
 
 }
 
@@ -74,17 +80,18 @@ for(let i = 0; i < chats.length; i++){
 }
 
 function joinChat(){
-    socket = io.connect('http://127.0.0.1:5000?room=501');
+    socket = io.connect('http://127.0.0.1:5000');
 
 	socket.on("connect", function() {
 		console.log("connected")
 	});
 
-	socket.on("response", function(response) {
-        addMessage(response)
+	socket.on("response", async function(response) {
+        await addMessage(response)
+        await scrollChat()
     })
     socket.on("disconnect", function(resp) {
-        console.log("wut", resp)
+        console.log("disconnect", resp)
     })
 }
 
@@ -93,10 +100,14 @@ function sendMessage(){
     if (msg !== "") {
         socket.emit('pm',
             {"text": msg, "sender": username, "id": 1});
+        msg.value = ""
     }
 }
 
-document.addEventListener("DOMContentLoaded", joinChat)
+document.addEventListener("DOMContentLoaded", async function () {
+    joinChat()
+    await scrollChat()
+})
 
 button = document.getElementById("send")
 button.addEventListener("click", sendMessage)

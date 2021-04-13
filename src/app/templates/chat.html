@@ -52,7 +52,7 @@
                 </div>
             </div>
             <div class="mesgs">
-                <div class="msg_history">
+                <div class="msg_history" id="chat_history">
                     {% for message in chats[0].messages %}
                         {% if message.sender.email != current_user %}
                             <div class="incoming_msg">
