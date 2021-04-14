@@ -38,7 +38,7 @@ def chat_event_handler(data):
     except KeyError:
         chat = Chat(chat_type="pm")
         chat.users.append(sender, receiver)
-        emails = [sender.email.receiver.email]
+        emails = [sender.email, receiver.email]
         message = Message(sender.id, data["text"])
         chat.messages.append(message)
     else:
