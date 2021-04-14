@@ -10,23 +10,5 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script
 </head>
 <body>
-<script type="text/javascript">
-$(document).ready(function() {
-
-	var socket = io.connect('http://127.0.0.1:5000?room=501');
-
-	socket.on('connect', function() {
-		socket.emit('pm',
-            {"msg": "Hi it's me!",
-             "id": 1});
-	});
-
-	socket.on('response', function(resp) {
-	    console.log(resp)
-		$("#messages").append('<li>'+resp.msg+'</li>')
-	});
-});
-</script>
-<ul id="messages"></ul>
 </body>
 </html>

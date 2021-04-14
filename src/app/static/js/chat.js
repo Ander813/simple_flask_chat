@@ -86,6 +86,14 @@ function joinChat(){
 		console.log("connected")
 	});
 
+    socket.on("connected", function(username) {
+        addToOnlineList([username])
+    })
+
+    socket.on("disconnected", function(username){
+        removeFromOnlineList(username)
+    })
+
 	socket.on("response", async function(response) {
         await addMessage(response)
         await scrollChat()
@@ -96,17 +104,50 @@ function joinChat(){
 }
 
 function sendMessage(){
-    let msg = document.getElementById("msg").value
-    if (msg !== "") {
+    let msg_input = document.getElementById("msg")
+    if (msg_input.value !== "") {
         socket.emit('pm',
-            {"text": msg, "sender": username, "id": 1});
-        msg.value = ""
+            {"text": msg_input.value, "sender": username, "id": 1});
+        msg_input.value = ""
+    }
+}
+
+async function getOnlineUsers(){
+    let users_online = await fetch("online").then(response => response.json())
+    return users_online.online
+}
+function alreadyInOnlineList(username) {
+    let users_online = document.getElementsByClassName("online-user")
+    for (let j = 0; j < users_online.length; j++) {
+        if (users_online[j].innerHTML === username) {
+            return true
+        }
+    }
+    return false
+}
+
+function addToOnlineList(users){
+    let users_list = document.getElementById("users-list")
+    for(let i=0; i<users.length; i++){
+        if(!alreadyInOnlineList(users[i])){
+            users_list.innerHTML += `<li class="online-user">${users[i]}</li>`
+        }
+    }
+}
+
+function removeFromOnlineList(username){
+    let users = document.getElementsByClassName("online-user")
+    for(let i=0; i < users.length; i++){
+        if(users[i].innerHTML === username){
+            users[i].remove()
+        }
     }
 }
 
 document.addEventListener("DOMContentLoaded", async function () {
     joinChat()
     await scrollChat()
+    addToOnlineList(await getOnlineUsers())
 })
 
 button = document.getElementById("send")
