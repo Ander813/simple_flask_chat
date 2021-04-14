@@ -15,14 +15,8 @@ prevent_disconnect = set()
 def chat_event_handler(data):
     if "text" not in data:
         return
-    id = data.get("id")
-    sender = User.query.filter_by(email=current_user.email).first()
 
-    if not id:
-        try:
-            receiver = User.query.filter_by(email=data["receiver"]).first()
-        except KeyError:
-            return
+    sender = User.query.filter_by(email=current_user.email).first()
 
     try:
         chat = Chat.query.filter_by(id=data["id"], chat_type="pm").first()
@@ -36,6 +30,7 @@ def chat_event_handler(data):
         message = Message(sender.id, data["text"])
         chat.messages.append(message)
     except KeyError:
+        receiver = User.query.filter_by(email=data["receiver"]).first()
         chat = Chat(chat_type="pm")
         chat.users.append(sender, receiver)
         emails = [sender.email, receiver.email]
